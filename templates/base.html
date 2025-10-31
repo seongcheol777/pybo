@@ -2,29 +2,69 @@
 <!doctype html>
 <html lang="ko">
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-widthminitial-scale=1,shrink-to-fit=no">
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css'%}">
-    <!-- pybo CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
-    <title>파이보</title>
+  <meta charset="utf-8">
+  <!-- 오타 수정: width=device-width, initial-scale=1 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+  <title>파이보</title>
+  <style>
+    .category-active { font-weight: 700; }
+  </style>
 </head>
 <body>
-{% include "navbar.html" %}
+  {% include "navbar.html" %}
 
-<!-- 기본 템플릿 안에 삽입될 내용 Start -->
-{% block content %}
-{% endblock %}
-<!-- 기본 템플릿 안에 삽입될 내용 End -->
-<!-- jQuery JS -->
-<script src="{% static 'jquery-3.7.1.min.js' %}"></script>
-<!-- Bootstrap JS -->
-<script src="{% static 'bootstrap.min.js' %}"></script>
-<!-- 자바스크립트 Start -->
-{% block script %}
-{% endblock %}
-<!-- 자바스크립트 End -->
+  <div class="container-fluid">
+    <div class="row">
+      <!-- 좌측 사이드바 -->
+      <aside class="col-12 col-md-3 col-lg-2 mb-3">
+        <div class="card">
+          <div class="card-header">카테고리</div>
+          <div class="list-group list-group-flush">
+
+            {# so/kw를 현재 요청에서 추출해 링크에 유지 #}
+            {% with qso=so|default_if_none:"" qkw=kw|default_if_none:"" %}
+              {% with qstr="?so="|add:qso|add:"&kw="|add:qkw %}
+
+                <!-- 전체 -->
+                <a class="list-group-item list-group-item-action {% if not active_category %}category-active{% endif %}"
+                   href="{% url 'pybo:index' %}{{ qstr }}">
+                  전체
+                </a>
+
+                <!-- 카테고리 루프 -->
+                {% for c in categories %}
+                  <a class="list-group-item list-group-item-action
+                            {% if active_category and active_category.id == c.id %}category-active{% endif %}"
+                     href="{% url 'pybo:question_list_by_category' c.slug %}{{ qstr }}">
+                    {{ c.name }}
+                  </a>
+                {% empty %}
+                  <div class="list-group-item text-muted">카테고리가 없습니다.</div>
+                {% endfor %}
+
+              {% endwith %}
+            {% endwith %}
+
+          </div>
+        </div>
+      </aside>
+
+      <!-- 우측 컨텐츠 -->
+      <main class="col-12 col-md-9 col-lg-10">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="{% static 'jquery-3.7.1.min.js' %}"></script>
+  <!-- Bootstrap JS -->
+  <script src="{% static 'bootstrap.min.js' %}"></script>
+
+  {% block script %}{% endblock %}
 </body>
 </html>

@@ -1,50 +1,60 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Q , Count
+from django.db.models import Q, Count
 
-from ..models import Question
+from ..models import Question, Category   # ← Category 추가
 
-def index(request):
+def index(request, slug=None):            # ← slug 파라미터 추가
     """
-    pybo 목록 출력
+    pybo 목록 출력 (카테고리 필터 + 정렬 + 검색 + 페이징)
     """
     # 입력 인자
-    page = request.GET.get('page','1')      # 페이지
-    kw = request.GET.get('kw','')           # 검색어
-    so = request.GET.get('so','recent')     # 정렬 기준
+    page = request.GET.get('page', '1')     # 페이지
+    kw   = request.GET.get('kw', '')        # 검색어
+    so   = request.GET.get('so', 'recent')  # 정렬 기준
+
+    # 기본 쿼리셋 + 카테고리 필터
+    active_category = None
+    qs = Question.objects.all()
+    if slug:
+        active_category = get_object_or_404(Category, slug=slug)
+        qs = qs.filter(category=active_category)
 
     # 정렬
     if so == 'recommend':
-        question_list = Question.objects.annotate(
-            num_voter=Count('voter')).order_by('-num_voter', '-create_date')
+        qs = qs.annotate(num_voter=Count('voter')).order_by('-num_voter', '-create_date')
     elif so == 'popular':
-        question_list = Question.objects.annotate(
-            num_answer=Count('answer')).order_by('-num_answer', '-create_date')
-    else: # recent
-        question_list = Question.objects.order_by('-create_date')
+        qs = qs.annotate(num_answer=Count('answer')).order_by('-num_answer', '-create_date')
+    else:  # recent
+        qs = qs.order_by('-create_date')
 
-
-    # 조회
-
+    # 검색
     if kw:
-        question_list = question_list.filter(
-            Q(subject__icontains=kw) |                  # 제목 검색
-            Q(content__icontains=kw) |                  # 내용 검색    
-            Q(author__username__icontains=kw) |         # 질문 글쓴이 검색
-            Q(answer__author__username__icontains=kw)   # 답변 글쓴이 검색
+        qs = qs.filter(
+            Q(subject__icontains=kw) |
+            Q(content__icontains=kw) |
+            Q(author__username__icontains=kw) |
+            Q(answer__author__username__icontains=kw)
         ).distinct()
 
-    # 페이징 처리
-    paginator=Paginator(question_list, 10) # 페이지당 10개씩 보여주기
+    # 페이징
+    paginator = Paginator(qs, 10)
     page_obj = paginator.get_page(page)
 
-    context={'question_list':page_obj, 'page' : page, 'kw' : kw, 'so' : so} # page와 kw가 추가됨
-    return render(request,'pybo/question_list.html',context)
+    context = {
+        'question_list': page_obj,
+        'page': page,
+        'kw': kw,
+        'so': so,
+        'active_category': active_category,   # ← 사이드바 활성표시용
+    }
+    return render(request, 'pybo/question_list.html', context)
 
-def detail(request,question_id):
+
+def detail(request, question_id):
     """
     pybo 내용 출력
     """
-    question=get_object_or_404(Question,pk=question_id)
-    context={'question':question}
-    return render(request,'pybo/question_detail.html',context)
+    question = get_object_or_404(Question, pk=question_id)
+    context = {'question': question}
+    return render(request, 'pybo/question_detail.html', context)
