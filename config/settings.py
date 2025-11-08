@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'dl_)lqnud%tw@zuf$spbj63y6%*os4^u-x!f4r$cueeze1n$#2'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key-change-me")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -39,9 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -112,20 +114,32 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS=[
-    BASE_DIR/'static',
-]
+# ✅ [수정/추가] 이미지 업로드와 정적 파일 세팅
+STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]       # 개발용 정적파일 폴더
+STATIC_ROOT = BASE_DIR / "staticfiles"         # 배포 시 collectstatic 결과 폴더
 
+MEDIA_URL = "media/"                           # 이미지 업로드 접근 URL
+MEDIA_ROOT = BASE_DIR / "media"                # 실제 업로드 저장 경로
+
+
+# ----------------------------------------
+# 8️⃣ Django 디버그 툴바 설정
+# ----------------------------------------
+INTERNAL_IPS = ["127.0.0.1"]
 
 # 로그인 성공 시 자동으로 이동할 URL
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+
+# ----------------------------------------
+# 🔟 기본 PK 타입 (경고 제거)
+# ----------------------------------------
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
