@@ -138,9 +138,12 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
 # Render / 리버스 프록시 HTTPS 인식
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# 세션을 쿠키에 저장 (서버 인스턴스가 여러 개여도 세션 공유 가능)
+# allauth OAuth state 유실 문제 해결: DB 대신 서명된 쿠키에 세션 저장
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+
 # 프로덕션 HTTPS 쿠키 설정 (Render 환경에서는 항상 적용)
 if RENDER_EXTERNAL_HOSTNAME:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_SAVE_EVERY_REQUEST = True

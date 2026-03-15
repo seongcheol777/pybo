@@ -1,9 +1,17 @@
-import os
-import uuid
-from django.conf import settings
+import base64
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+ALLOWED_MIME_TYPES = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+}
+MAX_SIZE_BYTES = 2 * 1024 * 1024  # 2 MB
 
 
 @login_required
@@ -13,18 +21,19 @@ def image_upload(request):
     if not image:
         return JsonResponse({'error': '이미지 파일이 없습니다.'}, status=400)
 
-    ext = os.path.splitext(image.name)[1].lower()
-    if ext not in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
-        return JsonResponse({'error': '지원하지 않는 파일 형식입니다.'}, status=400)
+    ext = ''
+    if '.' in image.name:
+        ext = '.' + image.name.rsplit('.', 1)[-1].lower()
 
-    filename = uuid.uuid4().hex + ext
-    save_dir = os.path.join(settings.MEDIA_ROOT, 'editor_images')
-    os.makedirs(save_dir, exist_ok=True)
+    if ext not in ALLOWED_EXTENSIONS:
+        return JsonResponse({'error': '지원하지 않는 파일 형식입니다. (jpg/png/gif/webp)'}, status=400)
 
-    filepath = os.path.join(save_dir, filename)
-    with open(filepath, 'wb') as f:
-        for chunk in image.chunks():
-            f.write(chunk)
+    data = image.read()
+    if len(data) > MAX_SIZE_BYTES:
+        return JsonResponse({'error': '파일 크기는 2MB 이하여야 합니다.'}, status=400)
 
-    url = settings.MEDIA_URL + 'editor_images/' + filename
-    return JsonResponse({'url': url})
+    mime = ALLOWED_MIME_TYPES[ext]
+    b64 = base64.b64encode(data).decode('utf-8')
+    data_url = f'data:{mime};base64,{b64}'
+
+    return JsonResponse({'url': data_url})
