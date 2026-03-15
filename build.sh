@@ -9,3 +9,8 @@ python manage.py migrate
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ]; then
     python manage.py createsuperuser --noinput || true
 fi
+
+# 초기 데이터 로드 (DB가 비어있을 때만)
+if [ -n "$LOAD_FIXTURES" ]; then
+    python manage.py loaddata fixtures/initial_data.json || true
+fi
