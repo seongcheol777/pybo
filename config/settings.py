@@ -14,9 +14,16 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-secret-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+# Render
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# AWS Elastic Beanstalk
+EB_HOSTNAME = os.environ.get('EB_HOSTNAME')
+if EB_HOSTNAME:
+    ALLOWED_HOSTS.append(EB_HOSTNAME)
 
 # Application definition
 INSTALLED_APPS = [
@@ -142,10 +149,17 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # allauth OAuth state 유실 문제 해결: DB 대신 서명된 쿠키에 세션 저장
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
-# 프로덕션 HTTPS 쿠키 설정 (Render 환경에서는 항상 적용)
+# 프로덕션 HTTPS 쿠키 설정 (Render)
 if RENDER_EXTERNAL_HOSTNAME:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    # Django 4.0+: CSRF Origin 검증은 ALLOWED_HOSTS가 아닌 CSRF_TRUSTED_ORIGINS 기준
     CSRF_TRUSTED_ORIGINS = [f'https://{RENDER_EXTERNAL_HOSTNAME}']
+
+# AWS Elastic Beanstalk
+if EB_HOSTNAME:
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_TRUSTED_ORIGINS = [
+        f'http://{EB_HOSTNAME}',
+        f'https://{EB_HOSTNAME}',
+    ]
