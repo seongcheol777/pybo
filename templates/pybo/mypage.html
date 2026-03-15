@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+    <h3 class="border-bottom pb-2">마이페이지 — {{ request.user.username }}</h3>
+
+    <h5 class="mt-4">내가 쓴 질문 ({{ my_questions.count }})</h5>
+    <table class="table table-sm">
+        <thead class="thead-light">
+            <tr><th>제목</th><th>작성일</th><th>추천</th><th>답변</th></tr>
+        </thead>
+        <tbody>
+        {% for q in my_questions %}
+        <tr>
+            <td><a href="{% url 'pybo:detail' q.id %}">{{ q.subject }}</a></td>
+            <td>{{ q.create_date|date:"Y-m-d" }}</td>
+            <td>{{ q.voter.count }}</td>
+            <td>{{ q.answer_set.count }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted">작성한 질문이 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h5 class="mt-4">내가 쓴 답변 ({{ my_answers.count }})</h5>
+    <table class="table table-sm">
+        <thead class="thead-light">
+            <tr><th>질문</th><th>작성일</th><th>추천</th><th>채택</th></tr>
+        </thead>
+        <tbody>
+        {% for a in my_answers %}
+        <tr>
+            <td>
+                <a href="{% url 'pybo:detail' a.question.id %}#answer_{{ a.id }}">
+                    {{ a.question.subject }}
+                </a>
+            </td>
+            <td>{{ a.create_date|date:"Y-m-d" }}</td>
+            <td>{{ a.voter.count }}</td>
+            <td>
+                {% if a.question.accepted_answer == a %}
+                <span class="badge badge-success">채택됨</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted">작성한 답변이 없습니다.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

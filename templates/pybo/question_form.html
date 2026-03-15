@@ -3,35 +3,116 @@
 {% block content %}
 <div class="container">
     <h5 class="my-3 border-bottom pb-2">질문 등록</h5>
-    <form method="post" class="post-form my-3">
+    <form method="post" enctype="multipart/form-data" class="post-form my-3">
         {% csrf_token %}
-        <!-- 오류 표시 Start -->
         {% if form.errors %}
-                <div class="alert alert-danger" role="alert">
-                    {% for field in form %}
-                    {% if field.errors %}
-                    <strong>{{ field.label }}</strong>
-                    {{ field.errors }}
-                    {% endif %}
-                {% endfor %}
-                </div>
+        <div class="alert alert-danger" role="alert">
+            {% for field in form %}{% if field.errors %}
+            <strong>{{ field.label }}</strong>{{ field.errors }}
+            {% endif %}{% endfor %}
+        </div>
         {% endif %}
-        <!-- 오류 표시 End -->
         <div class="form-group">
             <label for="subject">제목</label>
             <input type="text" class="form-control" name="subject" id="subject"
-                   value="{{ form.subject.value|default_if_none:''}}">
+                   value="{{ form.subject.value|default_if_none:'' }}">
         </div>
         <div class="form-group">
             <label for="content">내용</label>
             <textarea class="form-control" name="content" id="content"
-                      rows="10">{{ form.content.value|default_if_none:''}}</textarea>
+                      rows="10">{{ form.content.value|default_if_none:'' }}</textarea>
         </div>
         <div class="form-group">
-          <label for="{{ form.category.id_for_label }}">카테고리</label>
-          {{ form.category }}
+            <label for="{{ form.category.id_for_label }}">카테고리 <span class="text-danger">*</span></label>
+            {{ form.category }}
+            {% if form.category.errors %}
+            <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label for="tags">태그 <small class="text-muted">(쉼표로 구분, 예: Django, Python)</small></label>
+            <input type="text" class="form-control" name="tags" id="tags"
+                   value="{{ current_tags|default_if_none:'' }}">
+        </div>
+        <div class="form-group">
+            <label>첨부파일</label>
+            {{ form.attachment }}
         </div>
         <button type="submit" class="btn btn-primary">저장하기</button>
     </form>
 </div>
+{% endblock %}
+
+{% block script %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<input type="file" id="mde-image-input" accept="image/*" style="display:none">
+<style>
+/* 에디터 미리보기 이미지 최대 크기 */
+.editor-preview img,
+.editor-preview-side img {
+    max-width: 400px;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+    display: block;
+}
+/* side-by-side 시 에디터 높이 */
+.CodeMirror, .CodeMirror-scroll { min-height: 300px; }
+</style>
+<script>
+function setupImageUpload(mde) {
+    var input = document.getElementById('mde-image-input');
+    input.addEventListener('change', function() {
+        var file = input.files[0];
+        if (!file) return;
+        var formData = new FormData();
+        formData.append('image', file);
+        fetch('{% url "pybo:image_upload" %}', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: formData,
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.url) {
+                var cm = mde.codemirror;
+                var cursor = cm.getCursor();
+                cm.replaceRange('\n![](' + data.url + ')\n', cursor);
+                cm.focus();
+            } else {
+                alert(data.error || '업로드 실패');
+            }
+        })
+        .catch(function() { alert('업로드 중 오류가 발생했습니다.'); });
+        input.value = '';
+    });
+}
+
+var mde = new EasyMDE({
+    element: document.getElementById('content'),
+    spellChecker: false,
+    placeholder: '마크다운으로 작성하세요...',
+    sideBySideFullscreen: false,
+    toolbar: [
+        'bold', 'italic', 'heading', '|',
+        'quote', 'unordered-list', 'ordered-list', '|',
+        'link',
+        {
+            name: 'image-upload',
+            action: function() {
+                document.getElementById('mde-image-input').click();
+            },
+            className: 'fa fa-image',
+            title: '이미지 업로드',
+        },
+        '|',
+        'preview', 'side-by-side', 'fullscreen', '|',
+        'guide'
+    ],
+});
+setupImageUpload(mde);
+/* 기본으로 side-by-side(나란히 미리보기) 활성화 */
+mde.toggleSideBySide();
+</script>
 {% endblock %}

@@ -4,7 +4,18 @@ from django.shortcuts import render, get_object_or_404, redirect, resolve_url
 from django.utils import timezone
 
 from ..forms import CommentForm
-from ..models import Question, Answer, Comment
+from ..models import Question, Answer, Comment, Notification
+
+
+def _notify(recipient, sender, ntype, question, answer=None):
+    if recipient != sender:
+        Notification.objects.create(
+            recipient=recipient,
+            sender=sender,
+            notification_type=ntype,
+            question=question,
+            answer=answer,
+        )
 
 @login_required(login_url='common:login')
 def comment_create_question(request,question_id):
@@ -20,6 +31,7 @@ def comment_create_question(request,question_id):
             comment.create_date=timezone.now()
             comment.question=question
             comment.save()
+            _notify(question.author, request.user, 'comment', question)
             return redirect('{}#comment_{}'.format(resolve_url('pybo:detail',question_id=comment.question.id), comment.id))
     else:
         form=CommentForm()
@@ -77,6 +89,7 @@ def comment_create_answer(request,answer_id):
             comment.create_date=timezone.now()
             comment.answer=answer
             comment.save()
+            _notify(answer.author, request.user, 'comment', answer.question, answer)
             return redirect('{}#comment_{}'.format(resolve_url('pybo:detail',question_id=comment.answer.question.id), comment.id))
     else:
         form=CommentForm()

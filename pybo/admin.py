@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Category, Question, Answer, Comment  # ← 추가: Category, Answer, Comment
+from django.utils.html import format_html
+from .models import Category, Question, Answer, Comment, Banner
 
 # Category 관리
 @admin.register(Category)
@@ -26,3 +27,19 @@ class AnswerAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = ("id", "author", "question", "answer", "create_date", "modify_date")
     search_fields = ("content",)
+
+
+@admin.register(Banner)
+class BannerAdmin(admin.ModelAdmin):
+    list_display = ("slot", "preview", "link_url", "is_active")
+    list_editable = ("is_active",)
+    ordering = ("slot",)
+
+    def preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="width:200px;height:25px;object-fit:cover;">',
+                obj.image.url
+            )
+        return '-'
+    preview.short_description = '미리보기'

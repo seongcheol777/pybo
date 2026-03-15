@@ -8,7 +8,7 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
   <!-- Custom CSS -->
-  <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=3">
   <title>파이보</title>
   <style>
     .category-active { font-weight: 700; }
@@ -17,47 +17,39 @@
 <body>
   {% include "navbar.html" %}
 
-  <div class="container-fluid">
-    <div class="row">
-      <!-- 좌측 사이드바 -->
-      <aside class="col-12 col-md-3 col-lg-2 mb-3">
-        <div class="card">
-          <div class="card-header">카테고리</div>
-          <div class="list-group list-group-flush">
-
-            {# so/kw를 현재 요청에서 추출해 링크에 유지 #}
-            {% with qso=so|default_if_none:"" qkw=kw|default_if_none:"" %}
-              {% with qstr="?so="|add:qso|add:"&kw="|add:qkw %}
-
-                <!-- 전체 -->
-                <a class="list-group-item list-group-item-action {% if not active_category %}category-active{% endif %}"
-                   href="{% url 'pybo:index' %}{{ qstr }}">
-                  전체
-                </a>
-
-                <!-- 카테고리 루프 -->
-                {% for c in categories %}
-                  <a class="list-group-item list-group-item-action
-                            {% if active_category and active_category.id == c.id %}category-active{% endif %}"
-                     href="{% url 'pybo:question_list_by_category' c.slug %}{{ qstr }}">
-                    {{ c.name }}
-                  </a>
-                {% empty %}
-                  <div class="list-group-item text-muted">카테고리가 없습니다.</div>
-                {% endfor %}
-
-              {% endwith %}
-            {% endwith %}
-
-          </div>
-        </div>
-      </aside>
-
-      <!-- 우측 컨텐츠 -->
-      <main class="col-12 col-md-9 col-lg-10">
-        {% block content %}{% endblock %}
-      </main>
+  <!-- 배너 광고 (4×5 = 20슬롯) -->
+  <div class="banner-section">
+    <div class="banner-grid">
+      {% for banner in banners %}
+      <div class="banner-slot">
+        {% if banner and banner.image %}
+        <a href="{{ banner.link_url|default:'#' }}" {% if banner.link_url %}target="_blank"{% endif %}>
+          <img src="{{ banner.image.url }}" alt="배너 {{ forloop.counter }}">
+        </a>
+        {% endif %}
+      </div>
+      {% endfor %}
     </div>
+  </div>
+
+  <!-- 가로 카테고리 바 -->
+  <div class="category-bar">
+    {% with qso=so|default_if_none:"" qkw=kw|default_if_none:"" %}
+      {% with qstr="?so="|add:qso|add:"&kw="|add:qkw %}
+        <a class="category-bar-item {% if not active_category %}category-active{% endif %}"
+           href="{% url 'pybo:index' %}{{ qstr }}">전체</a>
+        {% for c in categories %}
+          <a class="category-bar-item {% if active_category and active_category.id == c.id %}category-active{% endif %}"
+             href="{% url 'pybo:question_list_by_category' c.slug %}{{ qstr }}">{{ c.name }}</a>
+        {% endfor %}
+      {% endwith %}
+    {% endwith %}
+  </div>
+
+  <div class="container-fluid">
+    <main>
+      {% block content %}{% endblock %}
+    </main>
   </div>
 
   <!-- jQuery -->

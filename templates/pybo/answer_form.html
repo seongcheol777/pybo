@@ -2,15 +2,90 @@
 
 {% block content %}
 <div class="container my-3">
-    <form method="post" class="post-form">
+    <form method="post" enctype="multipart/form-data" class="post-form">
         {% csrf_token %}
         {% include "form_errors.html" %}
         <div class="form-group">
-        <label for="content">답변내용</label>
-        <textarea class="form-control" name="content" id="content"
-                      rows="10">{{ form.content.value|default_if_none:''}}</textarea>
+            <label for="content">답변내용</label>
+            <textarea class="form-control" name="content" id="content"
+                      rows="10">{{ form.content.value|default_if_none:'' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label>첨부파일</label>
+            {{ form.attachment }}
         </div>
         <button type="submit" class="btn btn-primary">저장하기</button>
     </form>
 </div>
+{% endblock %}
+
+{% block script %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<input type="file" id="mde-image-input" accept="image/*" style="display:none">
+<style>
+.editor-preview img,
+.editor-preview-side img {
+    max-width: 400px;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+    display: block;
+}
+.CodeMirror, .CodeMirror-scroll { min-height: 300px; }
+</style>
+<script>
+function setupImageUpload(mde) {
+    var input = document.getElementById('mde-image-input');
+    input.addEventListener('change', function() {
+        var file = input.files[0];
+        if (!file) return;
+        var formData = new FormData();
+        formData.append('image', file);
+        fetch('{% url "pybo:image_upload" %}', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: formData,
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.url) {
+                var cm = mde.codemirror;
+                var cursor = cm.getCursor();
+                cm.replaceRange('\n![](' + data.url + ')\n', cursor);
+                cm.focus();
+            } else {
+                alert(data.error || '업로드 실패');
+            }
+        })
+        .catch(function() { alert('업로드 중 오류가 발생했습니다.'); });
+        input.value = '';
+    });
+}
+
+var mde = new EasyMDE({
+    element: document.getElementById('content'),
+    spellChecker: false,
+    placeholder: '마크다운으로 작성하세요...',
+    sideBySideFullscreen: false,
+    toolbar: [
+        'bold', 'italic', 'heading', '|',
+        'quote', 'unordered-list', 'ordered-list', '|',
+        'link',
+        {
+            name: 'image-upload',
+            action: function() {
+                document.getElementById('mde-image-input').click();
+            },
+            className: 'fa fa-image',
+            title: '이미지 업로드',
+        },
+        '|',
+        'preview', 'side-by-side', 'fullscreen', '|',
+        'guide'
+    ],
+});
+setupImageUpload(mde);
+mde.toggleSideBySide();
+</script>
 {% endblock %}

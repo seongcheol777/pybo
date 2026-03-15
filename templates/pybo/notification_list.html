@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+    <h3 class="border-bottom pb-2">알림</h3>
+    {% if notifications %}
+    <ul class="list-group">
+    {% for n in notifications %}
+    <li class="list-group-item {% if not n.is_read %}list-group-item-warning{% endif %}">
+        <a href="{{ n.get_url }}">{{ n.get_message }}</a>
+        <span class="text-muted small float-right">{{ n.create_date|date:"Y-m-d H:i" }}</span>
+    </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">알림이 없습니다.</p>
+    {% endif %}
+</div>
+{% endblock %}

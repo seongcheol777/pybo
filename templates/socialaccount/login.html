@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h3 class="border-bottom pb-2 mb-4">소셜 로그인</h3>
+            <div class="d-grid gap-2">
+                <form method="post" action="{% url 'google_login' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100 py-2">
+                        <strong>Google</strong>로 로그인
+                    </button>
+                </form>
+            </div>
+            <hr>
+            <p class="text-center">
+                <a href="{% url 'common:login' %}">일반 로그인</a> |
+                <a href="{% url 'common:signup' %}">회원가입</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
