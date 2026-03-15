@@ -8,9 +8,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('common/', include('common.urls')),
-    path('__debug__/', include('debug_toolbar.urls')),
-
-    # ✅ 루트 URL을 pybo 앱으로 연결
+    path('accounts/', include('allauth.urls')),
     path('', include('pybo.urls')),
 ]
 
