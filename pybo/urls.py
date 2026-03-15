@@ -1,6 +1,6 @@
 
 from django.urls import path
-from .views import base_views, question_views, answer_views, comment_views, vote_views
+from .views import base_views, question_views, answer_views, comment_views, vote_views, upload_views
 
 
 app_name='pybo'
@@ -10,8 +10,14 @@ urlpatterns = [
     path('category/<str:slug>/', base_views.index, name='question_list_by_category'),
 
     # base_views.py
-    path('',base_views.index,name='index'),
-    path('<int:question_id>/',base_views.detail,name='detail'),
+    path('', base_views.index, name='index'),
+    path('<int:question_id>/', base_views.detail, name='detail'),
+    path('tag/<str:tag_name>/', base_views.tag_index, name='tag_index'),
+    path('mypage/', base_views.mypage, name='mypage'),
+    path('notifications/', base_views.notification_list, name='notification_list'),
+
+    # upload_views.py
+    path('upload/image/', upload_views.image_upload, name='image_upload'),
 
     # question_views.py
     path('question/create/',question_views.question_create,name='question_create'),
