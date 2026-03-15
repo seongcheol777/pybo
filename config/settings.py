@@ -138,8 +138,8 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
 # Render / 리버스 프록시 HTTPS 인식
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# 프로덕션 HTTPS 쿠키 설정
-if not DEBUG:
+# 프로덕션 HTTPS 쿠키 설정 (Render 환경에서는 항상 적용)
+if RENDER_EXTERNAL_HOSTNAME:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'Lax'
