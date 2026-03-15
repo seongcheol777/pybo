@@ -22,9 +22,9 @@
     <div class="banner-grid">
       {% for banner in banners %}
       <div class="banner-slot">
-        {% if banner and banner.image %}
+        {% if banner and banner.image_url %}
         <a href="{{ banner.link_url|default:'#' }}" {% if banner.link_url %}target="_blank"{% endif %}>
-          <img src="{{ banner.image.url }}" alt="배너 {{ forloop.counter }}">
+          <img src="{{ banner.image_url }}" alt="배너 {{ forloop.counter }}">
         </a>
         {% endif %}
       </div>

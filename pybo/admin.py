@@ -36,10 +36,10 @@ class BannerAdmin(admin.ModelAdmin):
     ordering = ("slot",)
 
     def preview(self, obj):
-        if obj.image:
+        if obj.image_url:
             return format_html(
                 '<img src="{}" style="width:200px;height:25px;object-fit:cover;">',
-                obj.image.url
+                obj.image_url
             )
         return '-'
     preview.short_description = '미리보기'

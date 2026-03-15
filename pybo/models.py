@@ -113,7 +113,7 @@ class Notification(models.Model):
 
 class Banner(models.Model):
     slot = models.PositiveSmallIntegerField(unique=True, help_text='1~20 (가로4×세로5)')
-    image = models.FileField(upload_to='banners/', help_text='GIF/PNG/JPG (400×50px 권장)')
+    image_url = models.URLField(blank=True, default='', help_text='이미지 URL (GIF/PNG/JPG, 400×50px 권장)')
     link_url = models.URLField(blank=True, help_text='클릭 시 이동할 URL (선택)')
     is_active = models.BooleanField(default=True)
 
